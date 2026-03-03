@@ -279,8 +279,8 @@
             <div class="step">
                 <span class="step-number">1</span>
                 <b>Crea el Webhook:</b> Ve a <code>Configuración > Automatización > Acciones > Webhooks</code>.
-                Configura el método como <code>POST</code> y usa la URL de tu API (ej:
-                <code>https://tu-dominio.vercel.app/webhook</code>).
+                Configura el método como <code>POST</code> y usa la URL de tu API:
+                <code>https://zohocrmapi.vercel.app/webhook</code>.
             </div>
             <div class="step">
                 <span class="step-number">2</span>
@@ -292,10 +292,30 @@
                 <b>Vincula la Acción:</b> En la sección de "Acciones instantáneas", selecciona el Webhook que creaste en
                 el paso 1.
             </div>
-            <div class="step" style="margin-bottom: 0;">
+            <div class="step">
                 <span class="step-number">4</span>
                 <b>Verificación:</b> Cuando se cree o edite un registro en Zoho que cumpla la regla, verás que aparece
                 en los logs de tu servidor FastAPI automáticamente.
+            </div>
+            <div class="step" style="margin-bottom: 0;">
+                <span class="step-number">5</span>
+                <b>Formato de Envío (JSON):</b> En la configuración del Webhook, asegúrate de seleccionar
+                <code>JSON</code> en el formato del cuerpo (Body). Puedes enviar los datos como "Parámetros" o "Cuerpo
+                personalizado". Ejemplo de estructura recomendada:
+                <pre
+                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 13px; overflow-x: auto; color: #a6e22e;">
+{
+  "trigger": "workflow_regla_1",
+  "modulo": "Contacts",
+  "data": {
+    "id": "${Contacts.Contact Id}",
+    "nombre": "${Contacts.First Name}",
+    "apellido": "${Contacts.Last Name}",
+    "email": "${Contacts.Email}"
+  }
+}</pre>
+                <small style="color: #8892b0;">* Las variables entre <code>${}</code> son campos dinámicos que Zoho
+                    reemplazará automáticamente.</small>
             </div>
         </div>
     </div>
