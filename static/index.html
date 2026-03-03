@@ -299,23 +299,46 @@
             </div>
             <div class="step" style="margin-bottom: 0;">
                 <span class="step-number">5</span>
-                <b>Formato de Envío (JSON):</b> En la configuración del Webhook, asegúrate de seleccionar
-                <code>JSON</code> en el formato del cuerpo (Body). Puedes enviar los datos como "Parámetros" o "Cuerpo
-                personalizado". Ejemplo de estructura recomendada:
-                <pre
-                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 13px; overflow-x: auto; color: #a6e22e;">
+                <b>Detalle del Envío para "Posible Cliente" (Leads):</b>
+                <p style="margin-top: 10px; font-size: 14px; color: #8892b0;">
+                    El envío debe realizarse obligatoriamente por método <b>POST</b> con formato <b>JSON</b>.
+                </p>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; margin-top: 10px;">
+                    <p style="margin-bottom: 10px; font-weight: 600; color: #4facfe; font-size: 13px;">Ejemplo de
+                        Estructura JSON:</p>
+                    <pre style="font-size: 12px; color: #a6e22e; margin: 0; overflow-x: auto;">
 {
-  "trigger": "workflow_regla_1",
-  "modulo": "Contacts",
+  "trigger": "nuevo_prospecto",
+  "modulo": "Leads",
   "data": {
-    "id": "${Contacts.Contact Id}",
-    "nombre": "${Contacts.First Name}",
-    "apellido": "${Contacts.Last Name}",
-    "email": "${Contacts.Email}"
+    "id": "${Leads.Lead Id}",           // * Obligatorio
+    "nombre": "${Leads.First Name}",    // Opcional
+    "apellido": "${Leads.Last Name}",   // * Obligatorio
+    "email": "${Leads.Email}",          // * Obligatorio
+    "telefono": "${Leads.Phone}",       // Opcional
+    "empresa": "${Leads.Company}",      // Opcional
+    "estado": "${Leads.Lead Status}"    // Opcional
   }
 }</pre>
-                <small style="color: #8892b0;">* Las variables entre <code>${}</code> son campos dinámicos que Zoho
-                    reemplazará automáticamente.</small>
+                </div>
+
+                <div style="margin-top: 15px; font-size: 13px;">
+                    <p><b>Campos disponibles para mapear:</b></p>
+                    <ul style="list-style: none; padding-left: 0; color: #8892b0;">
+                        <li><code style="color: #f8f8f2;">ID</code> (*): Clave única del registro en Zoho.</li>
+                        <li><code style="color: #f8f8f2;">Apellido</code> (*): Requerido por Zoho para crear prospectos.
+                        </li>
+                        <li><code style="color: #f8f8f2;">Email</code> (*): Usado para evitar duplicados en la base
+                            local.</li>
+                        <li><code style="color: #f8f8f2;">Nombre, Teléfono, Empresa, Estado</code>: Informativos.</li>
+                    </ul>
+                </div>
+
+                <p
+                    style="border-left: 3px solid var(--primary); padding-left: 10px; margin-top: 15px; font-size: 13px; font-style: italic; color: #ffcc00;">
+                    Nota: Asegúrate de que el módulo en Zoho sea "Posibles Clientes" (Leads).
+                </p>
             </div>
         </div>
     </div>

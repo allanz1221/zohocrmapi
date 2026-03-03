@@ -75,12 +75,44 @@ async def read_index():
 
 @app.post("/webhook")
 async def handle_webhook(request: Request, db: Session = Depends(get_db)):
+    """
+    Endpoint para recibir webhooks desde Zoho CRM.
+    Apuntar el webhook a: https://zohocrmapi.vercel.app/webhook
+    """
     payload = await request.json()
     logger.info(f"Webhook recibido: {payload}")
+    
+    # 1. Guardar log crudo por seguridad
     db_log = WebhookLog(payload=str(payload))
     db.add(db_log)
+    
+    # 2. Intentar guardar como Prospecto en el listado local
+    # Zoho suele enviar los datos dentro de una clave (ej: 'data')
+    data = payload.get("data", {})
+    
+    if data:
+        # Extraer campos según el formato que sugerimos en la guía
+        nuevo_prospecto = Prospecto(
+            nombre=data.get("nombre", "Sin Nombre"),
+            apellido=data.get("apellido", "Sin Apellido"),
+            email=data.get("email"),
+            telefono=data.get("telefono"),
+            empresa=data.get("empresa"),
+            estado=data.get("estado", "Desde Webhook")
+        )
+        
+        # Solo guardamos si hay email (para evitar duplicados/basura)
+        if nuevo_prospecto.email:
+            # Verificar si ya existe para no fallar
+            existente = db.query(Prospecto).filter(Prospecto.email == nuevo_prospecto.email).first()
+            if not existente:
+                db.add(nuevo_prospecto)
+                logger.info(f"Nuevo prospecto creado vía webhook: {nuevo_prospecto.email}")
+            else:
+                logger.info(f"El prospecto {nuevo_prospecto.email} ya existe en la base local.")
+
     db.commit()
-    return {"status": "success", "message": "Webhook registrado"}
+    return {"status": "success", "message": "Webhook procesado y registrado"}
 
 @app.post("/update-contact")
 async def update_contact(
