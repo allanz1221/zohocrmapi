@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form, Depends
+from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
@@ -14,7 +14,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuración de la Base de Datos
-# Usamos /tmp/database.db ya que Vercel solo permite escribir en /tmp
 DB_PATH = "/tmp/database.db" if os.getenv("VERCEL") else "database.db"
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 
@@ -37,10 +36,21 @@ class ContactUpdateLog(Base):
     result = Column(Text)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-# Crear tablas si no existen
+class Prospecto(Base):
+    __tablename__ = "prospectos"
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String)
+    apellido = Column(String)
+    email = Column(String, unique=True)
+    telefono = Column(String)
+    empresa = Column(String)
+    estado = Column(String, default="Nuevo")
+    creado_en = Column(DateTime, default=datetime.datetime.utcnow)
+
+# Crear tablas
 Base.metadata.create_all(bind=engine)
 
-# Dependencia para obtener la sesión de la DB
+# Dependencia
 def get_db():
     db = SessionLocal()
     try:
@@ -48,9 +58,9 @@ def get_db():
     finally:
         db.close()
 
-app = FastAPI(title="Integración Zoho CRM con FastAPI")
+app = FastAPI(title="Integración Zoho CRM & CRM Local")
 
-# Montar archivos estáticos para el frontend (HTML/CSS)
+# Montar archivos estáticos
 if not os.path.exists("static"):
     os.makedirs("static")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -61,20 +71,16 @@ zoho = ZohoClient()
 async def read_index():
     return FileResponse("static/index.html")
 
+# --- Endpoints de Zoho ---
+
 @app.post("/webhook")
 async def handle_webhook(request: Request, db: Session = Depends(get_db)):
-    """
-    Endpoint para recibir webhooks desde Zoho CRM.
-    """
     payload = await request.json()
-    logger.info(f"Webhook recibido de Zoho: {payload}")
-    
-    # Guardar en la base de datos
+    logger.info(f"Webhook recibido: {payload}")
     db_log = WebhookLog(payload=str(payload))
     db.add(db_log)
     db.commit()
-    
-    return {"status": "success", "message": "Webhook recibido y registrado correctamente"}
+    return {"status": "success", "message": "Webhook registrado"}
 
 @app.post("/update-contact")
 async def update_contact(
@@ -85,9 +91,6 @@ async def update_contact(
     phone: str = Form(None),
     db: Session = Depends(get_db)
 ):
-    """
-    Endpoint para actualizar un contacto en Zoho CRM desde el formulario web.
-    """
     update_data = {}
     if first_name: update_data["First_Name"] = first_name
     if last_name: update_data["Last_Name"] = last_name
@@ -96,26 +99,47 @@ async def update_contact(
 
     try:
         result = await zoho.update_contact(contact_id, update_data)
-        logger.info(f"Resultado de actualización para {contact_id}: {result}")
-        
-        # Guardar registro en la base de datos
-        db_log = ContactUpdateLog(
-            contact_id=contact_id,
-            update_data=str(update_data),
-            result=str(result)
-        )
+        db_log = ContactUpdateLog(contact_id=contact_id, update_data=str(update_data), result=str(result))
         db.add(db_log)
         db.commit()
-        
         return JSONResponse(content={"status": "success", "data": result})
     except Exception as e:
-        logger.error(f"Error al actualizar contacto {contact_id}: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"status": "error", "message": f"Error interno: {str(e)}"}
-        )
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
 
-# Necesario para ejecución local
+# --- Endpoints CRUD de Prospectos (Local) ---
+
+@app.get("/prospectos")
+async def listar_prospectos(db: Session = Depends(get_db)):
+    return db.query(Prospecto).all()
+
+@app.post("/prospectos")
+async def crear_prospecto(
+    nombre: str = Form(...),
+    apellido: str = Form(...),
+    email: str = Form(...),
+    telefono: str = Form(None),
+    empresa: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    prospecto = Prospecto(nombre=nombre, apellido=apellido, email=email, telefono=telefono, empresa=empresa)
+    db.add(prospecto)
+    try:
+        db.commit()
+        db.refresh(prospecto)
+        return prospecto
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="El email ya existe o error en datos")
+
+@app.delete("/prospectos/{id}")
+async def borrar_prospecto(id: int, db: Session = Depends(get_db)):
+    prospecto = db.query(Prospecto).filter(Prospecto.id == id).first()
+    if not prospecto:
+        raise HTTPException(status_code=404, detail="Prospecto no encontrado")
+    db.delete(prospecto)
+    db.commit()
+    return {"status": "success", "message": "Prospecto eliminado"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

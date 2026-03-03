@@ -1,239 +1,368 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zoho CRM Contact Update</title>
+    <title>Gestión de Prospectos & Zoho CRM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2962ff;
             --primary-hover: #0039cb;
             --bg: #f5f7fb;
-            --card-bg: rgba(255, 255, 255, 0.8);
+            --card-bg: #ffffff;
             --text: #1a1f36;
             --text-muted: #4f566b;
             --border: #e3e8ee;
+            --success: #1e7e34;
+            --error: #d32f2f;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(41, 98, 255, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(41, 98, 255, 0.05) 0px, transparent 50%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
             color: var(--text);
+            padding: 40px 20px;
         }
 
         .container {
-            width: 100%;
-            max-width: 450px;
-            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
         }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        p.subtitle {
-            color: var(--text-muted);
-            text-align: center;
-            margin-bottom: 32px;
-            font-size: 14px;
+        h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--primary);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
             font-size: 13px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             color: var(--text-muted);
         }
 
         input {
             width: 100%;
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 6px;
             border: 1px solid var(--border);
-            background: white;
-            font-size: 15px;
-            color: var(--text);
             box-sizing: border-box;
-            transition: all 0.2s ease;
+            font-family: inherit;
         }
 
         input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
         }
 
         button {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
             background: var(--primary);
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s ease, transform 0.1s ease;
-            margin-top: 10px;
+            transition: 0.2s;
         }
 
         button:hover {
             background: var(--primary-hover);
-            transform: translateY(-1px);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        .message {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-            text-align: center;
-        }
-
-        .message.success {
-            background: #e6f4ea;
-            color: #1e7e34;
-            display: block;
-        }
-
-        .message.error {
-            background: #fdf2f2;
-            color: #d32f2f;
-            display: block;
-        }
-
-        #loading {
-            display: none;
-            text-align: center;
+        table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 10px;
         }
 
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(41, 98, 255, 0.2);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
+        th,
+        td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .btn-delete {
+            background: #ffeded;
+            color: #d32f2f;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            width: auto;
+        }
+
+        .btn-delete:hover {
+            background: #ffd6d6;
+        }
+
+        .webhook-guide {
+            background: #1a1f36;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+
+        .webhook-guide h2 {
+            color: #4facfe;
+        }
+
+        .webhook-guide code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #f8f8f2;
+        }
+
+        .step {
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        #message {
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #e6f4ea;
+            color: #1e7e34;
+        }
+
+        .error {
+            background: #fdf2f2;
+            color: #d32f2f;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1>Actualizar Contacto</h1>
-            <p class="subtitle">Sincronización directa con Zoho CRM</p>
-            
-            <form id="updateForm">
-                <div class="form-group">
-                    <label for="contact_id">Contact ID (de Zoho)</label>
-                    <input type="text" id="contact_id" name="contact_id" required placeholder="Ej: 415302000004381001">
-                </div>
-                
-                <div class="form-group">
-                    <label for="first_name">Nombre</label>
-                    <input type="text" id="first_name" name="first_name">
-                </div>
-                
-                <div class="form-group">
-                    <label for="last_name">Apellido</label>
-                    <input type="text" id="last_name" name="last_name">
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email">
-                </div>
-                
-                <div class="form-group">
-                    <label for="phone">Teléfono</label>
-                    <input type="tel" id="phone" name="phone">
-                </div>
-                
-                <button type="submit">Actualizar en Zoho</button>
-            </form>
 
-            <div id="loading">
-                <div class="spinner"></div>
-                <p style="font-size: 12px; margin-top: 8px;">Procesando...</p>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Panel de Control de Prospectos</h1>
+            <p style="color: var(--text-muted)">Gestión local y sincronización con Zoho CRM</p>
+        </header>
+
+        <div class="grid">
+            <!-- Columna Izquierda: Formulario -->
+            <div class="column">
+                <div class="card">
+                    <h2>Nuevo Posible Cliente</h2>
+                    <form id="prospectoForm">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" name="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellido</label>
+                            <input type="text" name="apellido" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="text" name="telefono">
+                        </div>
+                        <div class="form-group">
+                            <label>Empresa</label>
+                            <input type="text" name="empresa">
+                        </div>
+                        <button type="submit">Guardar Localmente</button>
+                    </form>
+                    <div id="message"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Actualizar en Zoho CRM</h2>
+                    <form id="zohoUpdateForm">
+                        <div class="form-group">
+                            <label>ID de Contacto Zoho</label>
+                            <input type="text" name="contact_id" required placeholder="Ej: 4153020000...">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Nuevo</label>
+                            <input type="email" name="email">
+                        </div>
+                        <button type="submit" style="background: #00b894;">Actualizar Zoho</button>
+                    </form>
+                </div>
             </div>
-            
-            <div id="responseMessage" class="message"></div>
+
+            <!-- Columna Derecha: Tabla -->
+            <div class="column">
+                <div class="card">
+                    <h2>Lista de Posibles Clientes (Local)</h2>
+                    <table id="prospectosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Empresa</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llena vía JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Guía de Webhooks -->
+        <div class="webhook-guide">
+            <h2>¿Cómo configurar el Webhook en Zoho CRM?</h2>
+            <div class="step">
+                <span class="step-number">1</span>
+                <b>Crea el Webhook:</b> Ve a <code>Configuración > Automatización > Acciones > Webhooks</code>.
+                Configura el método como <code>POST</code> y usa la URL de tu API (ej:
+                <code>https://tu-dominio.vercel.app/webhook</code>).
+            </div>
+            <div class="step">
+                <span class="step-number">2</span>
+                <b>Define la Regla:</b> Ve a <code>Configuración > Automatización > Reglas de Flujo de Trabajo</code>.
+                Crea una regla para el módulo que quieras (ej: "Posibles Clientes" o "Contactos").
+            </div>
+            <div class="step">
+                <span class="step-number">3</span>
+                <b>Vincula la Acción:</b> En la sección de "Acciones instantáneas", selecciona el Webhook que creaste en
+                el paso 1.
+            </div>
+            <div class="step" style="margin-bottom: 0;">
+                <span class="step-number">4</span>
+                <b>Verificación:</b> Cuando se cree o edite un registro en Zoho que cumpla la regla, verás que aparece
+                en los logs de tu servidor FastAPI automáticamente.
+            </div>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('updateForm');
-        const messageDiv = document.getElementById('responseMessage');
-        const loadingDiv = document.getElementById('loading');
+        const prospectoForm = document.getElementById('prospectoForm');
+        const zohoUpdateForm = document.getElementById('zohoUpdateForm');
+        const tableBody = document.querySelector('#prospectosTable tbody');
+        const messageDiv = document.getElementById('message');
 
-        form.addEventListener('submit', async (e) => {
+        function showMsg(text, isError = false) {
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'error' : 'success';
+            messageDiv.style.display = 'block';
+            setTimeout(() => messageDiv.style.display = 'none', 4000);
+        }
+
+        async function cargarProspectos() {
+            const res = await fetch('/prospectos');
+            const data = await res.json();
+            tableBody.innerHTML = '';
+            data.forEach(p => {
+                const row = `<tr>
+                <td>${p.nombre} ${p.apellido}</td>
+                <td>${p.email}</td>
+                <td>${p.empresa || '-'}</td>
+                <td><button class="btn-delete" onclick="borrarProspecto(${p.id})">Borrar</button></td>
+            </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        prospectoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            messageDiv.style.display = 'none';
-            loadingDiv.style.display = 'block';
-            
-            const formData = new FormData(form);
-            
-            try {
-                const response = await fetch('/update-contact', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                loadingDiv.style.display = 'none';
-                messageDiv.className = 'message ' + (result.status === 'success' ? 'success' : 'error');
-                
-                if (result.status === 'success') {
-                    messageDiv.textContent = '¡Contacto actualizado con éxito!';
-                } else {
-                    messageDiv.textContent = 'Error: ' + (result.message || 'Ocurrió un problema');
-                }
-            } catch (error) {
-                loadingDiv.style.display = 'none';
-                messageDiv.className = 'message error';
-                messageDiv.textContent = 'Error de conexión con el servidor: ' + error.message;
+            const formData = new FormData(prospectoForm);
+            const res = await fetch('/prospectos', { method: 'POST', body: formData });
+            if (res.ok) {
+                showMsg('Prospecto guardado con éxito');
+                prospectoForm.reset();
+                cargarProspectos();
+            } else {
+                showMsg('Error al guardar. ¿Email duplicado?', true);
             }
         });
+
+        zohoUpdateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(zohoUpdateForm);
+            const res = await fetch('/update-contact', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.status === 'success') {
+                alert('¡Actualizado en Zoho CRM!');
+                zohoUpdateForm.reset();
+            } else {
+                alert('Error Zoho: ' + data.message);
+            }
+        });
+
+        async function borrarProspecto(id) {
+            if (!confirm('¿Seguro que quieres borrarlo?')) return;
+            await fetch(`/prospectos/${id}`, { method: 'DELETE' });
+            cargarProspectos();
+        }
+
+        cargarProspectos();
     </script>
+
 </body>
+
 </html>
