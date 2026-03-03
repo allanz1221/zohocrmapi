@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoho CRM Contact Update</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2962ff;
+            --primary-hover: #0039cb;
+            --bg: #f5f7fb;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1a1f36;
+            --text-muted: #4f566b;
+            --border: #e3e8ee;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(41, 98, 255, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(41, 98, 255, 0.05) 0px, transparent 50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 5px 10px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            font-size: 15px;
+            color: var(--text);
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(41, 98, 255, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+
+        .message.success {
+            background: #e6f4ea;
+            color: #1e7e34;
+            display: block;
+        }
+
+        .message.error {
+            background: #fdf2f2;
+            color: #d32f2f;
+            display: block;
+        }
+
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(41, 98, 255, 0.2);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Actualizar Contacto</h1>
+            <p class="subtitle">Sincronización directa con Zoho CRM</p>
+            
+            <form id="updateForm">
+                <div class="form-group">
+                    <label for="contact_id">Contact ID (de Zoho)</label>
+                    <input type="text" id="contact_id" name="contact_id" required placeholder="Ej: 415302000004381001">
+                </div>
+                
+                <div class="form-group">
+                    <label for="first_name">Nombre</label>
+                    <input type="text" id="first_name" name="first_name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Apellido</label>
+                    <input type="text" id="last_name" name="last_name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone">
+                </div>
+                
+                <button type="submit">Actualizar en Zoho</button>
+            </form>
+
+            <div id="loading">
+                <div class="spinner"></div>
+                <p style="font-size: 12px; margin-top: 8px;">Procesando...</p>
+            </div>
+            
+            <div id="responseMessage" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('updateForm');
+        const messageDiv = document.getElementById('responseMessage');
+        const loadingDiv = document.getElementById('loading');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            messageDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/update-contact', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                loadingDiv.style.display = 'none';
+                messageDiv.className = 'message ' + (result.status === 'success' ? 'success' : 'error');
+                
+                if (result.status === 'success') {
+                    messageDiv.textContent = '¡Contacto actualizado con éxito!';
+                } else {
+                    messageDiv.textContent = 'Error: ' + (result.message || 'Ocurrió un problema');
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Error de conexión con el servidor: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
